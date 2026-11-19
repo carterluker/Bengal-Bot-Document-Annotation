@@ -8,7 +8,9 @@ const CATS = {
   structure: {label: 'Structure'},
 };
 
-const SAMPLE = `Artificial intelligence is a very big topic in college right now. Many people think that it is good and many people think it is bad. In this essay I will talk about whether students should be allowed to use AI tools when writing.
+const SAMPLE = `Should Colleges Allow AI Writing Tools?
+
+Artificial intelligence is a very big topic in college right now. Many people think that it is good and many people think it is bad. In this essay I will talk about whether students should be allowed to use AI tools when writing.
 
 AI tools can help students in a lot of ways. They can help with brainstorming, and they can help to check grammar, and they can suggest better words, and they can also explain things that a student does not understand yet, which means that students who use them might learn faster than students who do not. Studies show that students who get feedback improve more.
 
@@ -75,8 +77,23 @@ function analyze(text) {
   return out.map((f, i) => ({...f, id: i}));
 }
 
+// Infer a title: markdown heading, or a short first line with no end punctuation
+// followed by a blank line. Otherwise fall back to a trimmed first sentence.
+function inferTitle(raw) {
+  const m = raw.match(/^([^\n]*)(?:\n\s*\n|\n|$)/);
+  const first = m[1].trim(), rest = raw.slice(m[0].length).trim();
+  const heading = first.match(/^#{1,3}\s+(.+)$/);
+  if (heading) return {title: heading[1].trim(), body: rest, inferred: false};
+  const words = first.split(/\s+/).length;
+  if (rest && first.length <= 100 && words <= 14 && !/[.!?,;:]$/.test(first) && /^\n?\s*\n/.test(raw.slice(m[1].length)))
+    return {title: first, body: rest, inferred: false};
+  const sentence = (raw.match(/^[^.!?\n]+/) || [''])[0].trim().split(/\s+/);
+  const t = sentence.slice(0, 8).join(' ') + (sentence.length > 8 ? '…' : '');
+  return {title: t || 'Untitled draft', body: raw, inferred: true};
+}
+
 // ---------- State ----------
-let text = '', anns = [], active = null, hidden = new Set(), chats = {};
+let text = '', title = '', titleInferred = false, anns = [], active = null, hidden = new Set(), chats = {};
 
 // ---------- Screens ----------
 function show(name) {
@@ -100,7 +117,8 @@ function readFile(f) { if (f) f.text().then(t => { $('draft').value = t; }); }
 $('analyze').onclick = () => {
   const t = $('draft').value.trim();
   if (!t) { $('draft').focus(); $('draft').placeholder = 'Please paste text or upload a file first.'; return; }
-  text = t;
+  const r = inferTitle(t);
+  text = r.body; title = r.title; titleInferred = r.inferred;
   show('loading');
   const msgs = ['Checking against your assignment', 'Looking for unclear sentences', 'Checking claims for evidence', 'Marking up your draft'];
   let i = 0; const iv = setInterval(() => $('loadmsg').textContent = msgs[++i % msgs.length], 500);
@@ -112,6 +130,7 @@ $('back').onclick = () => show('upload');
 function esc(s) { return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
 function render() {
+  $('ctxTitle').textContent = title + (titleInferred ? ' (inferred title)' : '');
   $('ctxCourse').textContent = $('course').value;
   $('ctxAssign').textContent = $('assignment').value;
   renderDoc(); renderFilters(); renderList(); showDetail(null);
@@ -132,7 +151,7 @@ function renderDoc() {
     });
     html += `<p>${h}${esc(text.slice(p, pe))}</p>`;
   });
-  $('doc').innerHTML = html;
+  $('doc').innerHTML = `<h2 class="doctitle">${esc(title)}</h2>` + html;
 }
 
 function renderFilters() {

@@ -47,6 +47,7 @@ button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid transparen
 .f.off{opacity:.4;text-decoration:line-through}
 .layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:20px;align-items:start}
 .doc{background:#fff;border:1px solid var(--line);border-radius:6px;padding:48px 56px;font:17px/1.8 Georgia,'Times New Roman',serif;box-shadow:0 2px 8px #0001;min-height:60vh}
+.doctitle{font-size:28px;line-height:1.25;margin:0 0 .8em;text-align:center}
 .doc p{margin:0 0 1em;white-space:pre-wrap}
 .panel{position:sticky;top:16px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;max-height:calc(100vh - 32px);overflow:auto}
 .panel h3{margin:6px 0}

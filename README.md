@@ -28,7 +28,7 @@ All settings live in `config.json`, which is gitignored. Only `config.example.js
 | Key | Meaning |
 |-----|---------|
 | `apiKey` | Your Anthropic API key (required) |
-| `model` | Claude model ID, default `claude-opus-5-5` |
+| `model` | Claude model ID, default `claude-haiku-5-5` |
 | `port` | Local port, default `3000` |
 
 The key is read only by `server.js`; it is never sent to the browser.

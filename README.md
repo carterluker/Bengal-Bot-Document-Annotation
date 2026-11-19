@@ -10,39 +10,63 @@ This repository is a **prototype of one proposed feature: interactive document a
 
 ## Running the demo
 
-No install or build step. Open `index.html` in any modern browser.
+Requires Node 18+ and an Anthropic API key.
+
+```
+npm install
+copy config.example.json config.json     (macOS/Linux: cp)
+# edit config.json and set "apiKey"
+npm start
+```
+
+Then open http://localhost:3000.
+
+### Configuration
+
+All settings live in `config.json`, which is gitignored. Only `config.example.json` (placeholder values) is committed.
+
+| Key | Meaning |
+|-----|---------|
+| `apiKey` | Your Anthropic API key (required) |
+| `model` | Claude model ID, default `claude-opus-5-5` |
+| `port` | Local port, default `3000` |
+
+The key is read only by `server.js`; it is never sent to the browser.
 
 ## Using it
 
-1. **Upload:** Enter a course and assignment, then drop in a `.txt`/`.md` file, paste text, or click **Use sample essay**.
-2. **Review:** Click **Get feedback**. Highlights appear in the document, color-coded as Clarity, Evidence, Style, or Structure.
-   - Hover a highlight for a quick preview in the side panel.
-   - Click it (or an item in the list) for the explanation and a suggested fix.
-   - Use **Prev/Next** to step through feedback, and the category chips to filter.
-3. **Ask:** In the detail panel, type a question or use a preset ("Show me an example", etc.).
+1. **Upload:** Enter a course and assignment, then drop in a `.txt`/`.md` file, paste text, or click **Use sample essay**. Click **Get feedback**.
+2. **Review and ask (one page):** The draft appears with color-coded highlights (Clarity, Evidence, Style, Structure). The full feedback list sits beside it.
+   - Hover a highlight for a quick preview.
+   - Click a highlight (or a list item) to open its explanation, suggested fix, and a follow-up chat for that passage.
+   - Use **← Back to all feedback** (or press Esc) to close the detail and return to the full list. Prev/Next steps through items, and category chips filter them.
 
-## What is real and what is simulated
+## How it works
 
-This is a front-end demo only. **There is no AI model.**
+- `server.js` serves the page and exposes two endpoints that call the Claude API with the official SDK:
+  - `/api/analyze`: sends the draft, course, and assignment; Claude returns a title and annotations as structured JSON (exact quote, category, title, explanation, suggestion).
+  - `/api/ask`: answers a follow-up about one highlight, with the draft and earlier chat as context.
+- `app.js` locates each returned quote in the draft to place highlights. Quotes that can't be found verbatim are dropped.
+- The draft and assignment are treated as untrusted data in the prompts.
 
-- Analysis (`analyze()` in `app.js`) uses simple rules: filler words, vague nouns, unsourced claims, passive voice, very long sentences, "In this essay I will…" openers, and thin paragraphs.
-- Follow-up replies (`reply()` in `app.js`) are canned, keyed on the highlight's category and the question's wording.
-- Everything runs in the browser; no data is sent anywhere.
+## Notes and limits
 
-To make it real, replace `analyze()` with a call to a BengalBot model that returns `{start, end, cat, title, body, fix}` ranges, and `reply()` with a model call that includes the highlighted text, course, and assignment.
+- Drafts are limited to 30,000 characters.
+- Drafts are sent to the Claude API. A production BengalBot would run on ISU-controlled infrastructure to meet the data-sovereignty goal.
+- This prototype has no accounts, storage, or rate limiting. It binds to localhost only.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Page structure for the upload, loading, and review screens |
-| `styles.css` | Layout and highlight colors |
-| `app.js` | Analysis rules, rendering, interaction, simulated chat |
+| `index.html`, `styles.css`, `app.js` | Front end |
+| `server.js` | Static server and Claude API proxy |
+| `config.example.json` | Template for the private `config.json` |
 | `initial_prompt.md` | Original project brief |
 
 ## Ideas for next steps
 
-- Real model integration with assignment rubric as context
+- Include the assignment rubric as context
 - Canvas (LTI) integration and `.docx`/PDF upload
 - Accept/dismiss feedback and track revisions between drafts
 - Instructor view to tune what feedback is given

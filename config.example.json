@@ -1,0 +1,5 @@
+{
+  "apiKey": "sk-ant-REPLACE-ME",
+  "model": "claude-opus-5-5",
+  "port": 3000
+}
